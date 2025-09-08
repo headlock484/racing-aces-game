@@ -1,0 +1,892 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Racing Aces — Stable v24.7</title>
+<style>
+  html, body { margin:0; padding:0; height:100%; }
+  body { background:#0f2e1d; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Arial, 'Noto Sans', sans-serif; color:#fff; }
+  *, *::before, *::after { box-sizing: border-box; }
+  button { font: inherit; }
+  .hidden { display:none !important; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 16px; min-height: 100vh; background:#1a472a; }
+  .header { display:flex; align-items:center; justify-content: space-between; gap:12px; margin-bottom: 8px; }
+  .brand { display:flex; align-items:center; gap:12px; }
+  .logo { width:184px; height:auto; display:block; }
+  .title { text-transform: uppercase; letter-spacing:1px; background: linear-gradient(45deg,#0ea5a4,#f97316,#60a5fa);
+           -webkit-background-clip:text; background-clip:text; color:transparent; text-shadow:0 0 12px rgba(0,0,0,0.35);
+           font-weight:800; font-size:28px; position:relative; }
+  .title:after { content:''; position:absolute; left:0; bottom:-6px; height:3px; width:100%;
+                 background: linear-gradient(90deg,#0ea5a4,#f97316,#1f3a66); border-radius:2px; }
+  .slogan { font-size:13px; letter-spacing:.3px; margin-top:6px; position:relative; padding-left:10px; }
+  .slogan:before { content:'▸'; position:absolute; left:0; top:0; opacity:.9; color:#f97316; }
+  .slogan em { font-style:normal; color:#f97316; }
+  .slogan span { color:#a7f3d0; }
+
+  /* SETTINGS OVERLAY with theme accents */
+  .settings { position:relative; }
+  .settings-btn { width:42px; height:42px; border-radius:10px; border:2px solid #b8c0c2; background:#0b3d2b; color:#fff; cursor:pointer; }
+  .settings-overlay { position:fixed; inset:0; display:none; z-index:1000; }
+  .settings-overlay.open { display:block; }
+  .settings-overlay::before { content:''; position:absolute; inset:0; background:rgba(0,0,0,.45); backdrop-filter:blur(2px); }
+  .settings-panel { position:absolute; right:0; top:0; bottom:0; width:min(92vw, 440px); background:#0f3a2a; border-left:2px solid #1f3a66;
+                    box-shadow:-12px 0 28px rgba(0,0,0,.5); display:flex; flex-direction:column; }
+  .settings-head { display:flex; align-items:center; justify-content:space-between; padding:12px; border-bottom:1px solid rgba(255,255,255,.15);
+                   background: linear-gradient(90deg, rgba(14,50,37,1), rgba(31,58,102,.8)); }
+  .settings-body { overflow:auto; padding:8px 12px 24px; }
+  details.settings-sec { border:1px solid rgba(255,255,255,.12); border-radius:10px; margin:10px 0; overflow:hidden; }
+  details.settings-sec > summary { list-style:none; cursor:pointer; padding:12px; font-weight:700; background:#0e3225; }
+  details.settings-sec[open] > summary { background:linear-gradient(90deg,#11402b,#153a63); }
+  .settings-content { padding:10px 12px 14px; display:flex; flex-direction:column; gap:10px; }
+  .settings-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .pill { background:#134e4a; border:1px solid rgba(255,255,255,.25); border-radius:999px; padding:6px 10px; }
+  .range { width:160px; }
+  .close-settings { background:transparent; border:1px solid rgba(255,255,255,.35); color:#fff; padding:6px 10px; border-radius:8px; cursor:pointer; }
+
+  .panel { background:#20603a; border:2px solid #1f3a66; border-radius:10px; padding:16px; box-shadow:0 4px 8px rgba(0,0,0,.2); position:relative; z-index:1; }
+  .row { display:flex; align-items:center; gap:10px; }
+  .between { justify-content: space-between; }
+  .wraprow { flex-wrap: wrap; }
+  .center { justify-content:center; }
+  .mt { margin-top: 12px; }
+  .mb { margin-bottom: 12px; }
+  .btn { border:none; padding:10px 14px; border-radius:12px; cursor:pointer; color:#fff; }
+  .ok { background:#15803d; }
+  .danger { background:#b91c1c; }
+  .primary { background:#2563eb; }
+  .purple { background:#7c3aed; }
+  .grad { background: linear-gradient(45deg,#0ea5a4,#f97316,#60a5fa); font-weight:700; box-shadow:0 4px 12px rgba(0,0,0,.2); }
+
+  .chips { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+  .chip { background:#134e4a; border:1px solid rgba(255,255,255,.2); padding:10px 12px; border-radius:12px; cursor:pointer; }
+
+  .bettypes { display:flex; gap:10px; flex-wrap:wrap; margin:10px 0; }
+  .bettype { background:#134e4a; border:2px solid rgba(255,255,255,.25); padding:8px 12px; border-radius:12px; cursor:pointer; }
+  .bettype.selected { box-shadow: 0 0 0 3px #f59e0b; }
+  .bettype .payoutlbl { font-weight:800; color:#fde68a; margin-left:6px; }
+
+  .card { position: relative; background:#fff; color:#000; border-radius:8px; width:100px; height:140px;
+          display:flex; align-items:center; justify-content:center; box-shadow:0 4px 8px rgba(0,0,0,.2); }
+  .card.small { width:80px; height:112px; }
+  .card.micro { width:44px; height:60px; }
+  .card.big { width:110px; height:152px; }
+  .corner { position:absolute; font-weight:800; letter-spacing:0.3px; text-shadow:0 0 1px rgba(0,0,0,0.15); }
+  .top { top:6px; left:6px; } .bottom { bottom:6px; right:6px; transform: rotate(180deg); }
+  .suit { font-size:44px; line-height:1; }
+  .hearts, .diamonds { color:#e11d48; } .spades, .clubs { color:#0b0f14; }
+
+  /* racing micro card: BIG suit, small A; selection outlines */
+  .card.micro .corner, .card.micro .suit { display:none; }
+  .card.micro .monoA { font-weight:800; font-size:14px; position:absolute; top:4px; left:6px; color:#111; }
+  .card.micro .bigSuit { font-size:30px; line-height:1; }
+  .card.micro .bigSuit.hearts, .card.micro .bigSuit.diamonds { color:#e11d48; }
+  .card.micro .bigSuit.spades, .card.micro .bigSuit.clubs { color:#0b0f14; }
+  .racer .card.micro.selected { box-shadow:0 0 0 3px gold, 0 8px 16px rgba(0,0,0,.35); }
+  .racer .card.micro.selected-last { box-shadow:0 0 0 3px silver, 0 8px 16px rgba(0,0,0,.35); }
+
+  .card.back { background: linear-gradient(135deg,#0d47a1,#1565c0); border:2px solid #fff; }
+  .pattern { width:80%; height:80%; background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.15) 0px, rgba(255,255,255,.15) 5px, transparent 5px, transparent 10px); border-radius:4px; margin:auto; }
+
+  .suits { display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; margin:8px 0; }
+  .suitcard { display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; position:relative; }
+  .suitcard.selected .card { box-shadow: 0 0 0 3px gold, 0 8px 16px rgba(0,0,0,.35); }
+
+  .decks { display:flex; gap:16px; align-items:center; margin:16px 0 16px; position:relative; z-index:0; }
+  .deck { height:84px; display:flex; align-items:center; justify-content:center; }
+  .flipcard { width:60px; height:84px; transform-style:preserve-3d; transition: transform .5s; position: relative; }
+  .flipcard.flipping { transform: rotateY(180deg); }
+  .flipface { position:absolute; width:100%; height:100%; backface-visibility:hidden; border-radius:8px; display:flex; align-items:center; justify-content:center; }
+  .flipback { background: linear-gradient(135deg,#0d47a1,#1565c0); border:2px solid #fff; }
+  .flipfront { background:#fff; color:#000; transform: rotateY(180deg); }
+
+  .track { position:relative; height:260px; border:2px solid #1f3a66; border-radius:8px; overflow:hidden;
+           background: repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0, rgba(255,255,255,0.03) 6px, transparent 6px, transparent 12px),
+                       repeating-linear-gradient(180deg, #265f45 0, #265f45 12px, #2b6a4e 12px, #2b6a4e 24px); }
+  .steps { position:absolute; inset:0; display:flex; justify-content:space-between; padding:0 60px; pointer-events:none; z-index:1; }
+  .step { width:2px; height:100%; background: rgba(255,255,255,.2); }
+  .lane { position:relative; height:25%; border-bottom:1px dashed rgba(255,255,255,.25); }
+  .lane:last-child { border-bottom:none; }
+
+  .racer { position:absolute; left:0; top:50%; transform: translateY(-50%); transition:left .25s ease-out, opacity .35s;
+           z-index:2; opacity:0; transform-origin:left center; }
+  .track.started .racer { opacity:1; }
+
+  .finish { position:absolute; right:0; top:0; width:5px; height:100%;
+            background: repeating-linear-gradient(45deg, #000 0px, #000 10px, #fff 10px, #fff 20px); z-index:3; }
+  .finish-post { position:absolute; right:10px; top:8px; width:10px; height:180px; background:#e5e7eb; box-shadow: inset 0 0 0 2px #94a3b8; z-index:3; }
+
+  .horse-wrap { position:absolute; left:-10px; top:50%; transform: translateY(-50%); width:200px; height:140px; z-index:2; }
+  .horse { position:absolute; left:0; top:0; height:140px; width:auto; transform: scaleX(-1);
+           filter: drop-shadow(0 0 2px #ffffff) drop-shadow(1px 0 0 #ffffff) drop-shadow(-1px 0 0 #ffffff)
+                   drop-shadow(0 1px 0 #ffffff) drop-shadow(0 -1px 0 #ffffff) drop-shadow(0 0 6px rgba(0,0,0,.4)); }
+  .horses-hidden .horse-wrap { opacity:0; transition: opacity .35s; }
+
+  .saddle-badge { position:absolute; left:70px; top:34px; width:64px; height:44px; border-radius:8px; border:2px solid #ffffff;
+                  display:flex; align-items:center; justify-content:center; font-weight:900; font-size:26px; color:#ffffff;
+                  background:#0b214a; box-shadow:0 2px 6px rgba(0,0,0,.35); }
+  .saddle-badge.hearts, .saddle-badge.diamonds { color:#ff1f4b; }
+  .saddle-badge.clubs, .saddle-badge.spades { color:#0b0f14; background:#e5eef7; }
+
+  .pick-banner.hidden { display:none; }
+  .pick-banner { margin:8px 0 14px; background:#154e33; border:2px solid #1f3a66; border-radius:10px; padding:8px 12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .pill-mini { background:#0b3d2b; border:1px solid rgba(255,255,255,.25); padding:4px 10px; border-radius:999px; }
+
+  .enable-sound { position:fixed; left:50%; transform:translateX(-50%); bottom:16px; background:#0b3d2b; border:2px solid #b8c0c2;
+                  color:#fff; border-radius:999px; padding:10px 16px; display:none; z-index:999; }
+  .enable-sound.show { display:block; }
+
+  /* Bet Amount Modal */
+  .modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:1000; }
+  .modal.open { display:flex; }
+  .modal::before { content:''; position:absolute; inset:0; background:rgba(0,0,0,.45); backdrop-filter: blur(2px); }
+  .modal-card { position:relative; z-index:1; width:min(92vw, 420px); background:#164a34; border:2px solid #1f3a66; border-radius:12px; padding:16px; }
+  .modal-head { font-weight:800; margin-bottom:12px; }
+  .modal-row { display:flex; align-items:center; justify-content:center; gap:10px; margin:12px 0; }
+  .bet-input { width:120px; text-align:center; border:none; border-radius:8px; padding:8px; font-weight:700; }
+  .close-x { position:absolute; right:10px; top:8px; background:transparent; border:none; color:#fff; font-size:18px; cursor:pointer; }
+  .opt-row { display:flex; align-items:center; justify-content:center; gap:10px; margin-top:8px; }
+
+  @media (max-width:640px){
+    .logo { width:150px; }
+    .title { display:none; }
+    .suits { grid-template-columns: repeat(2, 1fr); }
+    .track { height:220px; }
+    .horse-wrap { width:170px; height:120px; }
+    .horse { height:120px; }
+    .saddle-badge { left:60px; top:30px; width:56px; height:40px; font-size:22px; }
+    .btn, .chip { padding:10px 12px; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div class="brand">
+        <img class="logo" src="assets/logo.png" alt="Racing Aces logo">
+        <div>
+          <div class="title">Racing Aces</div>
+          <div class="slogan"><em>The place to</em> <span>RIDE</span> those <em>WINNERS</em> home!</div>
+        </div>
+      </div>
+      <div class="settings">
+        <button class="settings-btn" title="Settings" aria-haspopup="dialog" aria-expanded="false">⚙️</button>
+      </div>
+    </div>
+
+    <!-- SETTINGS OVERLAY -->
+    <div class="settings-overlay" id="settingsOverlay" aria-hidden="true">
+      <div class="settings-panel" role="dialog" aria-label="Settings">
+        <div class="settings-head">
+          <div style="font-weight:800;">Settings</div>
+          <button class="close-settings" type="button">Close</button>
+        </div>
+        <div class="settings-body">
+          <details class="settings-sec" open>
+            <summary>Audio</summary>
+            <div class="settings-content">
+              <div class="settings-row"><div>Audio</div><button class="pill audio-toggle" type="button">On</button></div>
+              <div class="settings-row"><div>Volume</div><input class="range volume-slider" type="range" min="0" max="100" value="70"></div>
+              <small style="opacity:.9;color:#a7f3d0;">Gallop ambience starts on load (or on first tap); William Tell starts when you pick a suit.</small>
+            </div>
+          </details>
+
+          <details class="settings-sec">
+            <summary>Bet Types (info)</summary>
+            <div class="settings-content" style="line-height:1.5;">
+              <div><strong>Winner Only</strong>: pick the Ace that finishes first (payout <strong>x3.84</strong>)</div>
+              <div><strong>Winner + Last (Double)</strong>: pick the Ace that finishes first and the Ace that finishes last (payout <strong>x11.52</strong>)</div>
+            </div>
+          </details>
+
+          <details class="settings-sec">
+            <summary>How to Play</summary>
+            <div class="settings-content">
+              <ol style="margin:0; padding-left:22px; line-height:1.6;">
+                <li>Set your bet amount.</li>
+                <li>Bet types:
+                  <ul>
+                    <li><strong>Winner Only</strong> — predict which Ace finishes first.</li>
+                    <li><strong>Winner + Last (Double)</strong> — predict both the winner and the last place.</li>
+                  </ul>
+                </li>
+                <li><strong>Click a suit to place your bet immediately.</strong> (Turn on <em>Manual confirm</em> in the Bet modal if you prefer a button.)</li>
+                <li>Flip cards from the deck — each card advances the ace of the same suit.</li>
+                <li><strong>Return to Player (RTP): 96%</strong></li>
+              </ol>
+            </div>
+          </details>
+
+          <details class="settings-sec">
+            <summary>Bet History</summary>
+            <div class="settings-content"><div style="opacity:.8;">Coming soon</div></div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <div class="pick-banner hidden">
+      <span style="font-size:18px;">🏇</span>
+      <div> Your Pick: <span class="pick-badge"><span class="pick-suit">None</span></span></div>
+      <div class="pill-mini" style="margin-left:auto;">Bet Type: <strong class="pill-type">Winner Only</strong></div>
+      <div class="pill-mini bet-pill">Bet: <strong class="bet-amount">SZ 100.00</strong></div>
+    </div>
+
+    <section class="phase phase-betting">
+      <h2 style="font-size:22px;font-weight:700;margin:0 0 12px;">Place Your Bet</h2>
+      <div class="panel">
+        <div class="row between wraprow" style="margin-bottom:12px; align-items:center;">
+          <div class="row"><span>Your Balance:</span>&nbsp;<strong class="balance">SZ 1000.00</strong></div>
+          <button class="btn ok open-betmodal" type="button" title="Set bet amount">💰 Bet</button>
+        </div>
+
+        <div class="bettypes">
+          <div class="bettype selected" data-type="single">Winner Only <span class="payoutlbl">(x<span class="payout-single">3.84</span>)</span></div>
+          <div class="bettype" data-type="double">Winner + Last (Double) <span class="payoutlbl">(x<span class="payout-double">11.52</span>)</span></div>
+        </div>
+
+        <p class="mt singles-label" style="text-align:center;">select the ace suit to win the race</p>
+        <p class="mt doubles-label hidden" style="text-align:center;">Select your Ace suit to win the race</p>
+        <div class="suits">
+          <div class="suitcard" data-suit="hearts" tabindex="0">
+            <div class="card small"><div class="corner top">A</div><div class="suit hearts">♥</div><div class="corner bottom">A</div></div><div>Hearts</div>
+          </div>
+          <div class="suitcard" data-suit="diamonds" tabindex="0">
+            <div class="card small"><div class="corner top">A</div><div class="suit diamonds">♦</div><div class="corner bottom">A</div></div><div>Diamonds</div>
+          </div>
+          <div class="suitcard" data-suit="clubs" tabindex="0">
+            <div class="card small"><div class="corner top">A</div><div class="suit clubs">♣</div><div class="corner bottom">A</div></div><div>Clubs</div>
+          </div>
+          <div class="suitcard" data-suit="spades" tabindex="0">
+            <div class="card small"><div class="corner top">A</div><div class="suit spades">♠</div><div class="corner bottom">A</div></div><div>Spades</div>
+          </div>
+        </div>
+
+        <div class="double-picker hidden mt" style="text-align:center;">
+          <p class="mt double-label-last" style="text-align:center; margin-bottom:6px;">select your ace suit to finish last</p>
+          <div class="suits last-suits"></div>
+        </div>
+
+        <div class="center mt">
+          <button class="btn grad place-bet" type="button" disabled style="display:none;">Place Bet</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="phase phase-race hidden">
+      <h2 style="font-size:22px;font-weight:700;margin:0 0 12px;">Race in Progress</h2>
+      <div class="panel">
+        <div class="row between wraprow" style="margin-bottom:12px; align-items:flex-start;">
+          <div>Cards Remaining: <strong class="cards-remaining">48</strong></div>
+          <div>Current Card: <strong class="current-card">-</strong></div>
+          <div class="row"><button class="btn primary flip" type="button">Flip Card</button><button class="btn purple auto" type="button">Auto Flip</button></div>
+        </div>
+        <div class="decks">
+          <div class="deck"><div class="card back"><div class="pattern"></div></div></div>
+          <div class="deck flipped-holder"></div>
+        </div>
+        <div class="track">
+          <div class="steps"><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div></div>
+          <div class="lane">
+            <div class="horse-wrap hearts" aria-hidden="true"><img class="horse" src="assets/horse.png" alt=""><div class="saddle-badge hearts">♥</div></div>
+            <div class="racer hearts"></div>
+          </div>
+          <div class="lane">
+            <div class="horse-wrap diamonds" aria-hidden="true"><img class="horse" src="assets/horse.png" alt=""><div class="saddle-badge diamonds">♦</div></div>
+            <div class="racer diamonds"></div>
+          </div>
+          <div class="lane">
+            <div class="horse-wrap clubs" aria-hidden="true"><img class="horse" src="assets/horse.png" alt=""><div class="saddle-badge clubs">♣</div></div>
+            <div class="racer clubs"></div>
+          </div>
+          <div class="lane">
+            <div class="horse-wrap spades" aria-hidden="true"><img class="horse" src="assets/horse.png" alt=""><div class="saddle-badge spades">♠</div></div>
+            <div class="racer spades"></div>
+          </div>
+          <div class="finish"></div><div class="finish-post"></div>
+        </div>
+        <p class="mt" style="text-align:center;">Flip cards to advance the aces!</p>
+      </div>
+    </section>
+
+    <section class="phase phase-result hidden">
+      <h2 style="font-size:22px;font-weight:700;margin:0 0 12px;">Race Results</h2>
+      <div class="panel">
+        <div class="result-msg" style="text-align:center; font-size:22px; margin-bottom:12px;"></div>
+        <div class="center mb" style="gap:16px; align-items:center;">
+          <div class="card big winner-card">
+            <div class="corner top">A</div>
+            <div class="suit winner-suit">?</div>
+            <div class="corner bottom">A</div>
+          </div>
+        </div>
+        <div class="center" style="gap:10px; flex-wrap:wrap;">
+          <div class="mb">Your Balance: <strong class="final-balance">SZ 1000.00</strong></div>
+          <button class="btn grad bet-again" type="button">Bet Again</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="phase howto">
+      <h2 style="font-size:20px;font-weight:700;margin:16px 0 8px;">How to Play</h2>
+      <div class="panel">
+        <ol style="margin:0; padding-left:22px; line-height:1.6;">
+          <li>Set your bet amount.</li>
+          <li>Bet types:
+            <ul>
+              <li><strong>Winner Only</strong> — predict which Ace finishes first.</li>
+              <li><strong>Winner + Last (Double)</strong> — predict both the winner and the last place.</li>
+            </ul>
+          </li>
+          <li><strong>Click a suit to place your bet immediately.</strong> (Turn on <em>Manual confirm</em> in the Bet modal if you prefer a button.)</li>
+          <li>Flip cards from the deck — each card advances the ace of the same suit</li>
+        </ol>
+      </div>
+    </section>
+  </div>
+
+  <!-- Audio -->
+  <audio id="audGallop" preload="auto" loop src="assets/gallop.mp3"></audio>
+  <audio id="audWilliam" preload="auto" src="assets/william_tell.mp3" loop></audio>
+  <div class="enable-sound" id="enableSound">🔊 Enable sound</div>
+
+  <!-- Bet Amount Modal -->
+  <div class="modal" id="betModal" aria-hidden="true" role="dialog" aria-label="Set Bet Amount">
+    <div class="modal-card">
+      <button class="close-x" type="button" aria-label="Close">✕</button>
+      <div class="modal-head">Set Bet Amount</div>
+      <div class="modal-row">
+        <button class="btn danger bet-dec" type="button">-</button>
+        <input class="bet-input" type="number" min="10" max="100000" step="10" value="100">
+        <button class="btn ok bet-inc" type="button">+</button>
+      </div>
+      <div class="chips" style="justify-content:center;">
+        <div class="chip" data-amt="10">10</div>
+        <div class="chip" data-amt="50">50</div>
+        <div class="chip" data-amt="100">100</div>
+        <div class="chip" data-amt="250">250</div>
+        <div class="chip" data-amt="500">500</div>
+      </div>
+      <div class="opt-row">
+        <label><input type="checkbox" id="manualConfirm"> Manual confirm (show “Place Bet” button)</label>
+      </div>
+      <div class="center mt"><button class="btn grad close-betmodal" type="button">Done</button></div>
+    </div>
+  </div>
+
+<script>
+// === CONFIG (for devs) ===
+// Change display currency globally by overriding window.RACING_ACES_CONFIG before DOMContentLoaded.
+// Example: <script>window.RACING_ACES_CONFIG={currencyCode:'ZAR', prefix:'R'};</script>
+window.RACING_ACES_CONFIG = window.RACING_ACES_CONFIG || { currencyCode:'SZL', prefix:'SZ' };
+
+(function(){
+  const dom = {
+    phases: {
+      betting: document.querySelector('.phase-betting'),
+      race: document.querySelector('.phase-race'),
+      result: document.querySelector('.phase-result'),
+    },
+    howtoSection: document.querySelector('.howto'),
+    pickBanner: document.querySelector('.pick-banner'),
+    pickSuit: document.querySelector('.pick-suit'),
+    pillType: document.querySelector('.pill-type'),
+    betPillAmt: document.querySelector('.bet-amount'),
+    balance: document.querySelector('.balance'),
+    openBet: document.querySelector('.open-betmodal'),
+    betModal: document.getElementById('betModal'),
+    betInput: document.querySelector('.bet-input'),
+    manualConfirm: document.getElementById('manualConfirm'),
+    betDec: document.querySelector('.bet-dec'),
+    betInc: document.querySelector('.bet-inc'),
+    chips: document.querySelectorAll('.chip'),
+    placeBet: document.querySelector('.place-bet'),
+    suits: document.querySelectorAll('.suitcard'),
+    lastSuitsWrap: document.querySelector('.last-suits'),
+    doublePicker: document.querySelector('.double-picker'),
+    singlesLabel: document.querySelector('.singles-label'),
+    doublesLabel: document.querySelector('.doubles-label'),
+    doubleLabelLast: document.querySelector('.double-label-last'),
+    cardsRemaining: document.querySelector('.cards-remaining'),
+    currentCard: document.querySelector('.current-card'),
+    flippedHolder: document.querySelector('.flipped-holder'),
+    racers: {
+      hearts: document.querySelector('.racer.hearts'),
+      diamonds: document.querySelector('.racer.diamonds'),
+      clubs: document.querySelector('.racer.clubs'),
+      spades: document.querySelector('.racer.spades')
+    },
+    winnerSuit: document.querySelector('.winner-suit'),
+    finalBalance: document.querySelector('.final-balance'),
+    flip: document.querySelector('.flip'),
+    auto: document.querySelector('.auto'),
+    betAgain: document.querySelector('.bet-again'),
+    track: document.querySelector('.track'),
+    enableSound: document.getElementById('enableSound'),
+    audGallop: document.getElementById('audGallop'),
+    audWilliam: document.getElementById('audWilliam'),
+    payoutSingle: document.querySelector('.payout-single'),
+    payoutDouble: document.querySelector('.payout-double'),
+    betTypes: document.querySelectorAll('.bettype'),
+    settingsBtn: document.querySelector('.settings-btn'),
+    settingsOverlay: document.getElementById('settingsOverlay'),
+    closeSettings: document.querySelector('.close-settings'),
+    audioToggle: document.querySelector('.audio-toggle'),
+    volumeSlider: document.querySelector('.volume-slider')
+  };
+
+  // Currency handling (dev-configurable, no UI)
+  const cur = { code: window.RACING_ACES_CONFIG.currencyCode || 'SZL', prefix: window.RACING_ACES_CONFIG.prefix || 'SZ' };
+  function fmt(n){
+    try {
+      const nf = new Intl.NumberFormat(undefined, { style:'currency', currency:cur.code, currencyDisplay:'code', minimumFractionDigits:2 });
+      return nf.format(n).replace(cur.code, cur.prefix);
+    } catch(e){
+      return (cur.prefix + ' ' + n.toFixed(2));
+    }
+  }
+
+  const state = {
+    startingBalance: 1000,
+    balance: 1000,
+    bet: 100,
+    betType: 'single',
+    selected: null,
+    selectedLast: null,
+    positions: { hearts:0, diamonds:0, clubs:0, spades:0 },
+    deck: [], index: 0, winner: null, last: null,
+    autoTimer: null, finishThreshold: 95, started: false, lockFlip: false,
+    soundReady: false,
+    audioEnabled: true,
+    masterVol: 0.70,
+    williamCurrentVol: 0.0
+  };
+
+  function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+  function symbol(s){ return s==='hearts'?'♥':s==='diamonds'?'♦':s==='clubs'?'♣':'♠'; }
+  function makeDeck(){
+    const suits=['hearts','diamonds','clubs','spades'];
+    const values=['2','3','4','5','6','7','8','9','10','J','Q','K'];
+    const deck=[]; for(const suit of suits){ for(const value of values){ deck.push({ suit, value }); } }
+    for(let i=deck.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [deck[i],deck[j]]=[deck[j],deck[i]]; }
+    return deck;
+  }
+
+  function updateBalance(){ dom.balance.textContent = fmt(state.balance); dom.finalBalance.textContent = fmt(state.balance); updatePlaceBet(); }
+  function updateBetPill(){ dom.betPillAmt.textContent = fmt(state.bet); }
+  function updatePlaceBet(){
+    const ok = state.bet>=10 && state.bet<=state.balance && state.selected && (state.betType==='single' || (state.betType==='double' && state.selectedLast && state.selectedLast!==state.selected));
+    dom.placeBet.disabled = !ok;
+  }
+  function updatePickBanner(){
+    if (!state.selected){ dom.pickBanner.classList.add('hidden'); return; }
+    dom.pickBanner.classList.remove('hidden');
+    dom.pickSuit.textContent = symbol(state.selected) + ' ' + cap(state.selected) + (state.betType==='double' && state.selectedLast ? ('  •  Last: ' + symbol(state.selectedLast) + ' ' + cap(state.selectedLast)) : '');
+    document.querySelector('.pill-type').textContent = state.betType === 'single' ? 'Winner Only' : 'Winner + Last (Double)';
+    updateBetPill();
+  }
+
+  function initRacers(){
+    ['hearts','diamonds','clubs','spades'].forEach(s => {
+      const r = dom.racers[s];
+      r.innerHTML = '';
+      const card = document.createElement('div');
+      card.className = 'card micro';
+      card.innerHTML = '<div class="monoA">A</div><div class="bigSuit '+s+'">'+symbol(s)+'</div>';
+      r.appendChild(card);
+      r.style.left = '0%';
+      r.style.opacity = '0';
+      card.classList.remove('selected','selected-last');
+    });
+  }
+
+  function highlightSelectedRacers(){
+    Object.entries(dom.racers).forEach(([s,el])=>{
+      const card = el.querySelector('.card.micro');
+      if (!card) return;
+      card.classList.toggle('selected', state.selected===s);
+      card.classList.toggle('selected-last', state.selectedLast===s);
+    });
+  }
+
+  function measureFinishThreshold(){
+    const trackW = dom.track.clientWidth || 1;
+    const sample = dom.racers.hearts.querySelector('.card.micro');
+    const cardW = sample ? sample.offsetWidth : 40;
+    const finishW = 5, margin = 2;
+    const threshold = 100 - ((cardW + finishW + margin) / trackW) * 100;
+    state.finishThreshold = Math.max(80, Math.min(98.5, threshold));
+  }
+  let resizeTO;
+  window.addEventListener('resize', () => { clearTimeout(resizeTO); resizeTO = setTimeout(measureFinishThreshold, 150); });
+
+  // Sound engine
+  const TENSION_MIN = 0.10;   // starting vol for William when race begins
+  const TENSION_MAX = 0.42;   // mid ceiling
+  const GALLOP_BASE = 0.18;   // ambience baseline on load
+  const SOFT_IDLE = 0.12;     // post-result gentle level
+
+  function applyVolumes(){
+    dom.audGallop.volume = (state.audioEnabled ? GALLOP_BASE : 0) * state.masterVol;
+    dom.audWilliam.volume = (state.audioEnabled ? state.williamCurrentVol : 0) * state.masterVol;
+  }
+
+  function tryPlayGallop(){
+    applyVolumes();
+    dom.audGallop.currentTime = 0;
+    const p = dom.audGallop.play();
+    if (p && p.catch) p.catch(()=>{});
+    return p;
+  }
+  function stopGallop(){ try{ dom.audGallop.pause(); }catch(e){} }
+
+  function startWilliam(){
+    stopGallop();
+    try{
+      dom.audWilliam.currentTime = 0;
+      state.williamCurrentVol = TENSION_MIN;
+      applyVolumes();
+      const p = dom.audWilliam.play();
+      if (p && p.catch) p.catch(()=>{});
+    }catch(e){};
+  }
+  function rampWilliam(progress){
+    const v = Math.min(TENSION_MAX, TENSION_MIN + (TENSION_MAX - TENSION_MIN) * Math.max(0, Math.min(1, progress)));
+    state.williamCurrentVol = v;
+    applyVolumes();
+  }
+  function fadeWilliamToSoft(ms=2200){
+    const steps = 11; const interval = ms/steps;
+    let i = 0;
+    const startV = state.williamCurrentVol;
+    const h = setInterval(()=>{
+      i++;
+      const t = i/steps;
+      state.williamCurrentVol = Math.max(SOFT_IDLE, startV * (1 - t) + SOFT_IDLE * t);
+      applyVolumes();
+      if (i>=steps){ clearInterval(h); }
+    }, interval);
+  }
+
+  // Autoplay init: try gallop on load; if blocked, enable any-interaction start
+  function initSound(){
+    tryPlayGallop().then(()=>{
+      dom.enableSound.classList.remove('show');
+      state.soundReady = true;
+    }).catch(()=>{
+      dom.enableSound.classList.add('show');
+      state.soundReady = false;
+    });
+  }
+  dom.enableSound.addEventListener('click', ()=>{
+    tryPlayGallop().then(()=>{
+      dom.enableSound.classList.remove('show');
+      state.soundReady = true;
+    }).catch(()=>{});
+  });
+  ['click','keydown','pointerdown','touchstart'].forEach(ev=>{
+    document.addEventListener(ev, ()=>{
+      if (!state.soundReady || dom.audGallop.paused){
+        tryPlayGallop().then(()=>{
+          dom.enableSound.classList.remove('show');
+          state.soundReady = true;
+        }).catch(()=>{});
+      }
+    }, { passive:true });
+  });
+
+  // Settings overlay open/close
+  dom.settingsBtn.addEventListener('click', ()=>{
+    dom.settingsOverlay.classList.add('open');
+    dom.settingsOverlay.setAttribute('aria-hidden','false');
+  });
+  dom.closeSettings.addEventListener('click', ()=>{
+    dom.settingsOverlay.classList.remove('open');
+    dom.settingsOverlay.setAttribute('aria-hidden','true');
+  });
+  dom.settingsOverlay.addEventListener('click', (e)=>{
+    if (e.target === dom.settingsOverlay){
+      dom.settingsOverlay.classList.remove('open');
+      dom.settingsOverlay.setAttribute('aria-hidden','true');
+    }
+  });
+
+  // Audio toggle + volume
+  dom.audioToggle.addEventListener('click', ()=>{
+    state.audioEnabled = !state.audioEnabled;
+    dom.audioToggle.textContent = state.audioEnabled ? 'On' : 'Off';
+    if (!state.audioEnabled){
+      stopGallop(); try{ dom.audWilliam.pause(); }catch(e){};
+    } else {
+      tryPlayGallop();
+    }
+    applyVolumes();
+  });
+  dom.volumeSlider.addEventListener('input', ()=>{
+    state.masterVol = Math.max(0, Math.min(1, dom.volumeSlider.value/100));
+    applyVolumes();
+  });
+
+  // Bet Amount Modal
+  function openBetModal(){ dom.betModal.classList.add('open'); dom.betModal.setAttribute('aria-hidden','false'); }
+  function closeBetModal(){ dom.betModal.classList.remove('open'); dom.betModal.setAttribute('aria-hidden','true'); }
+  document.querySelector('.open-betmodal').addEventListener('click', openBetModal);
+  document.querySelector('.close-x').addEventListener('click', closeBetModal);
+  document.querySelector('.close-betmodal').addEventListener('click', closeBetModal);
+  dom.betModal.addEventListener('click', (e)=>{ if (e.target===dom.betModal) closeBetModal(); });
+  dom.manualConfirm.addEventListener('change', ()=>{
+    const manual = dom.manualConfirm.checked;
+    dom.placeBet.style.display = manual ? 'inline-block' : 'none';
+  });
+
+  // Bet amount controls
+  function clampBet(v){ return Math.max(10, Math.min(state.balance, v)); }
+  document.querySelector('.bet-dec').addEventListener('click', ()=>{ state.bet = clampBet(state.bet - 10); dom.betInput.value = state.bet; updatePlaceBet(); updateBetPill(); });
+  document.querySelector('.bet-inc').addEventListener('click', ()=>{ state.bet = clampBet(state.bet + 10); dom.betInput.value = state.bet; updatePlaceBet(); updateBetPill(); });
+  dom.betInput.addEventListener('change', ()=>{ state.bet = clampBet(parseInt(dom.betInput.value)||10); dom.betInput.value = state.bet; updatePlaceBet(); updateBetPill(); });
+  dom.betInput.addEventListener('keyup', ()=>{ state.bet = clampBet(parseInt(dom.betInput.value)||10); updatePlaceBet(); updateBetPill(); });
+  dom.chips.forEach(ch => ch.addEventListener('click', () => {
+    const amt = parseInt(ch.getAttribute('data-amt'))||10;
+    state.bet = clampBet(amt);
+    dom.betInput.value = state.bet;
+    updatePlaceBet(); updateBetPill();
+  }));
+
+  // Bet type switching
+  dom.betTypes.forEach(bt => bt.addEventListener('click', ()=>{
+    dom.betTypes.forEach(x=>x.classList.remove('selected'));
+    bt.classList.add('selected');
+    state.betType = bt.getAttribute('data-type');
+    syncBetTypeUI();
+  }));
+
+  function syncBetTypeUI(){
+    const isDouble = state.betType==='double';
+    dom.doublePicker.classList.toggle('hidden', !isDouble);
+    dom.singlesLabel.classList.toggle('hidden', isDouble);
+    dom.doublesLabel.classList.toggle('hidden', !isDouble);
+    dom.doubleLabelLast.classList.toggle('hidden', !isDouble);
+    buildLastSuitPicker();
+    updatePlaceBet(); updatePickBanner();
+  }
+
+  function buildLastSuitPicker(){
+    const wrap = dom.lastSuitsWrap;
+    wrap.innerHTML = '';
+    ['hearts','diamonds','clubs','spades'].forEach(s => {
+      const el = document.createElement('div');
+      el.className = 'suitcard';
+      el.setAttribute('data-suit', s);
+      el.innerHTML = '<div class="card small"><div class="corner top">A</div><div class="suit '+s+'">'+symbol(s)+'</div><div class="corner bottom">A</div></div><div>'+cap(s)+'</div>';
+      if (state.selectedLast === s) el.classList.add('selected');
+      el.addEventListener('click', ()=>{
+        if (s === state.selected){ return; }
+        state.selectedLast = s;
+        Array.from(wrap.children).forEach(x=>x.classList.remove('selected'));
+        el.classList.add('selected');
+        highlightSelectedRacers();
+        maybeAutoStart();
+        updatePlaceBet(); updatePickBanner();
+      });
+      wrap.appendChild(el);
+    });
+  }
+
+  function updateCardsRemaining(){ dom.cardsRemaining.textContent = String(Math.max(0, state.deck.length - state.index)); }
+
+  function startSequence(){
+    if (state.started) return;
+    state.started = true;
+    dom.track.classList.add('started');
+    dom.track.classList.add('horses-hidden');
+  }
+
+  function prepareRace(){
+    state.positions = { hearts:0, diamonds:0, clubs:0, spades:0 };
+    initRacers();
+    highlightSelectedRacers();
+    state.deck = makeDeck(); state.index = 0; state.winner = null; state.last = null;
+    state.started = false;
+    updateCardsRemaining(); dom.currentCard.textContent = '-';
+    dom.phases.betting.classList.add('hidden');
+    dom.phases.race.classList.remove('hidden');
+    dom.flippedHolder.innerHTML = '';
+    updatePickBanner();
+    dom.track.classList.remove('started','horses-hidden');
+    Object.values(dom.racers).forEach(r => { r.style.left = '0%'; r.style.opacity = '0'; });
+    measureFinishThreshold();
+  }
+
+  function placeBetAndStart(){
+    state.balance = +(state.balance - state.bet).toFixed(2);
+    updateBalance();
+    prepareRace();
+    if (state.audioEnabled){ startWilliam(); }
+  }
+
+  // suit selection
+  dom.suits.forEach(el => {
+    el.addEventListener('click', ()=>{
+      dom.suits.forEach(s=>s.classList.remove('selected'));
+      el.classList.add('selected');
+      state.selected = el.getAttribute('data-suit');
+      highlightSelectedRacers();
+      updatePickBanner();
+      setHowToVisible(false);
+      if (state.betType==='double'){
+        if (state.selectedLast === state.selected){ state.selectedLast = null; buildLastSuitPicker(); highlightSelectedRacers(); }
+      } else {
+        maybeAutoStart();
+      }
+    });
+  });
+
+  function maybeAutoStart(){
+    const needManual = dom.manualConfirm.checked;
+    const ready = state.bet>=10 && state.bet<=state.balance && state.selected && (state.betType==='single' || (state.betType==='double' && state.selectedLast && state.selectedLast!==state.selected));
+    if (!ready) return;
+    if (needManual){
+      updatePlaceBet();
+      dom.placeBet.style.display = 'inline-block';
+      return;
+    }
+    placeBetAndStart();
+  }
+
+  document.querySelector('.place-bet').addEventListener('click', ()=>{
+    const ok = state.bet>=10 && state.bet<=state.balance && state.selected && (state.betType==='single' || (state.betType==='double' && state.selectedLast && state.selectedLast!==state.selected));
+    if (!ok) return;
+    placeBetAndStart();
+  });
+
+  // Flip & auto
+  document.querySelector('.flip').addEventListener('click', ()=>{ flip(true); });
+  document.querySelector('.auto').addEventListener('click', ()=>{
+    if (state.autoTimer){ stopAuto(); return; }
+    startSequence();
+    state.autoTimer = setInterval(()=>{
+      if (state.winner || state.index >= state.deck.length) { stopAuto(); return; }
+      flip(false);
+    }, 550);
+    document.querySelector('.auto').textContent = 'Stop Auto';
+  });
+  function stopAuto(){
+    if (state.autoTimer) { clearInterval(state.autoTimer); state.autoTimer = null; document.querySelector('.auto').textContent='Auto Flip'; }
+  }
+
+  function flip(triggerStart){
+    if (state.winner || state.index >= state.deck.length) return;
+    if (state.lockFlip) return;
+    state.lockFlip = true; setTimeout(()=>{ state.lockFlip = false; }, 350);
+    if (triggerStart) startSequence();
+
+    const card = state.deck[state.index++];
+    const el = document.createElement('div');
+    el.className = 'flipcard';
+    el.innerHTML = '<div class="flipface flipback"><div class="pattern"></div></div>' +
+                   '<div class="flipface flipfront"><div class="corner top">'+card.value+'</div>' +
+                   '<div class="suit '+card.suit+'">'+symbol(card.suit)+'</div>' +
+                   '<div class="corner bottom">'+card.value+'</div></div>';
+    dom.flippedHolder.innerHTML = ''; dom.flippedHolder.appendChild(el);
+    setTimeout(()=>el.classList.add('flipping'), 30);
+    dom.currentCard.textContent = card.value + ' of ' + cap(card.suit);
+
+    const step = 100 / 10;
+    state.positions[card.suit] = Math.min(100, state.positions[card.suit] + step);
+    dom.racers[card.suit].style.left = state.positions[card.suit] + '%';
+    dom.racers[card.suit].style.opacity = '1';
+    updateCardsRemaining();
+
+    const progress = Math.min(1, Math.max(...Object.values(state.positions)) / state.finishThreshold);
+    state.williamCurrentVol = Math.min(0.6, Math.max(state.williamCurrentVol, 0.10 + 0.32*progress));
+    applyVolumes();
+
+    if (!state.winner && state.positions[card.suit] >= state.finishThreshold) {
+      crossFinish(card.suit);
+    }
+  }
+
+  function crossFinish(suit){
+    if (state.winner) return;
+    state.winner = suit;
+    stopAuto();
+    const racer = dom.racers[suit];
+    const extra = 80 + Math.random()*40;
+    racer.style.transition = 'left '+(220+Math.random()*140)+'ms ease-out, opacity .35s, transform .35s';
+    racer.style.left = 'calc(100% + '+extra+'px)';
+    racer.addEventListener('transitionend', ()=>{
+      setTimeout(()=>finish(), 320);
+    }, { once:true });
+  }
+
+  function computeLastPlace(){
+    let min = Infinity, lastSuit = null;
+    for (const [s, v] of Object.entries(state.positions)){
+      if (v < min){ min = v; lastSuit = s; }
+    }
+    return lastSuit;
+  }
+
+  function finish(){
+    if (!state.winner) return;
+    state.last = computeLastPlace();
+
+    const isSingle = state.betType === 'single';
+    const ok = isSingle ? (state.selected === state.winner) : (state.selected === state.winner && state.selectedLast === state.last);
+    const multiplier = isSingle ? 3.84 : 11.52;
+
+    let winnings = 0;
+    if (ok) {
+      winnings = +(state.bet * multiplier).toFixed(2);
+      state.balance = +(state.balance + winnings).toFixed(2);
+      updateBalance();
+      navigator.vibrate?.([30, 40, 30]);
+    } else {
+      navigator.vibrate?.([18, 22]);
+    }
+    dom.phases.race.classList.add('hidden');
+    dom.phases.result.classList.remove('hidden');
+    dom.winnerSuit.textContent = symbol(state.winner);
+    document.querySelector('.result-msg').textContent = ok
+      ? (isSingle
+          ? `Congrats! Your ${cap(state.selected)} Ace won. Payout x${multiplier.toFixed(2)}: ${fmt(winnings)}.`
+          : `Double success! First: ${cap(state.selected)}, Last: ${cap(state.selectedLast)}. Payout x${multiplier.toFixed(2)}: ${fmt(winnings)}.`)
+      : (isSingle
+          ? `Close! The ${cap(state.winner)} Ace won. You lost ${fmt(state.bet)}.`
+          : `Not this time. Winner: ${cap(state.winner)}, Last: ${cap(state.last)}. You lost ${fmt(state.bet)}.`);
+
+    // Fade William to a soft idle level and keep playing quietly
+    fadeWilliamToSoft(2200);
+  }
+
+  function setHowToVisible(vis){
+    document.querySelector('.howto').classList.toggle('hidden', !vis);
+  }
+
+  // Init
+  function init(){
+    updateBalance();
+    updateBetPill();
+    initRacers();
+    measureFinishThreshold();
+    buildLastSuitPicker();
+    const v = 0.70; state.masterVol = v; document.querySelector('.volume-slider').value = 70; 
+    try { initSound(); } catch(e){}
+  }
+  init();
+
+  // Bet again returns to ambience
+  document.querySelector('.bet-again').addEventListener('click', ()=>{
+    dom.phases.result.classList.add('hidden');
+    dom.phases.betting.classList.remove('hidden');
+    document.querySelectorAll('.suitcard').forEach(s=>s.classList.remove('selected'));
+    state.selected = null; state.selectedLast = null;
+    updatePlaceBet(); updatePickBanner();
+    setHowToVisible(true);
+    try{ dom.audWilliam.pause(); }catch(e){}
+    tryPlayGallop();
+  });
+})();
+</script>
+</body>
+</html>
